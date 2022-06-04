@@ -39,7 +39,7 @@ class PolicyIterationAgent(Agent):
                     # TODO 1.1.b)
                     Terminal_state = mdp.isTerminal(s)
                     next_state, prob = [], []
-                    next_state, prob = self.gridWorld.getTransitionStatesAndProbs(s, a)
+                    next_state, prob = self.mdp.getTransitionStatesAndProbs(s, a)
                     reward = self.mdp.getReward(s, a, next_state)
                     possible_transitions = len(next_state)
                     
