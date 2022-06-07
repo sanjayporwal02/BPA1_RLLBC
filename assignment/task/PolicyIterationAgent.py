@@ -21,7 +21,7 @@ class PolicyIterationAgent(Agent):
         # Policy initialization
         # ******************
         # TODO 1.1.a)
-        # self.V = ...
+        self.V = np.zeros_like(states)
 
         # *******************
 
@@ -35,18 +35,31 @@ class PolicyIterationAgent(Agent):
                 newV = {}
                 for s in states:
                     a = self.pi[s]
+                    actions = self.mdp.getPossibleActions(s)
                     # *****************
                     # TODO 1.1.b)
-                    # if...
+                    
+                    if self.mdp.isTerminal(s):
+                        newV[s] = 0
+                        return None
                     #
-                    # else:...
+                    else:
+                        for action in actions:
+                        nextStates = self.mdp.getTransitionStatesAndProbs(s, action)[0]
+                        probs = self.mdp.getTransitionStatesAndProbs(s, action)[1]
+                        for nextState in nextStates:
+                            rewards = self.mdp.getReward(s, action, nextState)
+                            for reward in rewards:
+                                newV[s] = a * probs * (reward + discount*newV[nextState])
 
                 # update value estimate
-                # self.V=...
+                self.V = newV 
 
                 # ******************
 
             policy_stable = True
+            val = {}
+            initial_val = np.inf
             for s in states:
                 actions = self.mdp.getPossibleActions(s)
                 if len(actions) < 1:
@@ -55,9 +68,24 @@ class PolicyIterationAgent(Agent):
                     old_action = self.pi[s]
                     # ************
                     # TODO 1.1.c)
-                    # self.pi[s] = ...
+                    for action in actions:
+                        val[s] = 0
+                        nextStates = self.mdp.getTransitionStatesAndProbs(s, action)[0]
+                        probs = self.mdp.getTransitionStatesAndProbs(s, action)[1]
+                        for nextState in nextStates:
+                            rewards = self.mdp.getReward(s, action, nextState)
+                            for reward in rewards:
+                                val[s] = probs * (reward + discount*newV[nextState])
+                        if val[s] > initial_val:
+                            initial_val = val[s]
+                            best_action = action
 
-                    # policy_stable =
+                if best_action != old_action:
+                    policy_stable = False
+
+                    self.pi[s] = best_action
+
+                    
 
                     # ****************
             counter += 1
@@ -72,7 +100,7 @@ class PolicyIterationAgent(Agent):
         """
         # *******
         # TODO 1.2.
-
+        return self.V[state]
         # ********
 
     def getQValue(self, state, action):
@@ -85,8 +113,18 @@ class PolicyIterationAgent(Agent):
         """
         # *********
         # TODO 1.3.
+        actions = self.mdp.getPossibleActions(s)
+        QValue = 0
+        for action in actions:
+                        nextStates = self.mdp.getTransitionStatesAndProbs(s, action)[0]
+                        probs = self.mdp.getTransitionStatesAndProbs(s, action)[1]
+                        for nextState in nextStates:
+                            rewards = self.mdp.getReward(s, action, nextState)
+                            for reward in rewards:
+                                QValue = probs * (reward + self.discount*self.V[nextState])
 
-        # **********
+
+        return QValue
 
     def getPolicy(self, state):
         """
@@ -95,7 +133,7 @@ class PolicyIterationAgent(Agent):
         """
         # **********
         # TODO 1.4.
-
+        return self.pi[state]
         # **********
 
     def getAction(self, state):
