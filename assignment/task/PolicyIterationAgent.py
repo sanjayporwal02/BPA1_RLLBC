@@ -59,7 +59,7 @@ class PolicyIterationAgent(Agent):
 
             policy_stable = True
             val = {}
-            initial_val = np.inf
+            initial_val = -np.inf
             for s in states:
                 actions = self.mdp.getPossibleActions(s)
                 if len(actions) < 1:
