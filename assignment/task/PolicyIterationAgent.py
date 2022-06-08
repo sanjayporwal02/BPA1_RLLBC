@@ -1,6 +1,6 @@
 import numpy as np
 from agent import Agent
-
+import operator
 
 # TASK 1
 
@@ -21,12 +21,12 @@ class PolicyIterationAgent(Agent):
         # Policy initialization
         # ******************
         # TODO 1.1.a)
-        self.V = np.zeros_like(states)
-
+        self.V = {s: 0 for s in states}
+        
         # *******************
 
         self.pi = {s: self.mdp.getPossibleActions(s)[-1] if self.mdp.getPossibleActions(s) else None for s in states}
-
+        
         counter = 0
 
         while True:
@@ -37,22 +37,18 @@ class PolicyIterationAgent(Agent):
                     a = self.pi[s]
                     # *****************
                     # TODO 1.1.b)
-                    Terminal_state = mdp.isTerminal(s)
-                    next_state, prob = [], []
-                    next_state, prob = self.mdp.getTransitionStatesAndProbs(s, a)
-                    reward = self.mdp.getReward(s, a, next_state)
-                    possible_transitions = len(next_state)
-                    
-                    if Terminal_state == True:
-                        newV[s] = 0.0
-                        return None
+                    if mdp.isTerminal(s) == True:
+                    # if a is None:  
+                        newV[s] = 0.0                        
                     else:
                         # update value estimate
-                        for t in range(possible_transitions): #looping over all the possible transitions from state s
-                            newV[s] += self.pi[s,t]*prob[t]*(reward + discount*self.V[next_state[t]]) #summing state value over all possible transition
-                self.V = newV
+                        reward = self.mdp.getReward(s,a,None)
+                        successors = mdp.getTransitionStatesAndProbs(s,a)
+                        newV[s] = 0.0 
+                        for next_state, prob in successors: #looping over all the possible transitions from state s
+                            newV[s] += prob*(reward + discount*self.V[next_state]) #summing state value over all possible transition
+                    self.V[s] = newV[s]
                         # ******************
-
             policy_stable = True
             for s in states:
                 actions = self.mdp.getPossibleActions(s)
@@ -62,19 +58,18 @@ class PolicyIterationAgent(Agent):
                     old_action = self.pi[s]
                     # ************
                     # TODO 1.1.c)
-                    q_pi = -np.inf
+                    v_pi = {a: 0 for a in actions}
                     for a in actions: # iterate through every possible action : where is the best value, i.e., a = argmax_a q(s,a)
-                        v_pi = 0
-                        for t in range(possible_transitions): #looping over all the possible transitions from state s
-                            v_pi += prob[t]*(reward + discount*self.V[next_state[t]])
-                            if q_pi<=v_pi:
-                                q_pi = v_pi
-                                best_action = a
-                    if best_action != old_action:
+                        reward = self.mdp.getReward(s,a,None)
+                        successors = mdp.getTransitionStatesAndProbs(s,a)
+                        for next_state, prob in successors: #looping over all the possible transitions from state s
+                            v_pi[a] += prob*(reward + discount*self.V[next_state])
+                    
+                    self.pi[s] = max(v_pi, key=v_pi.get)
+                   
+                    if old_action != self.pi[s]:
                         policy_stable = False
-                        # changing the policy to pi_prime to avoid infinite loop
-                        self.pi[s] = best_action
-
+                   
                     # ****************
             counter += 1
 
@@ -100,14 +95,12 @@ class PolicyIterationAgent(Agent):
         to derive it on the fly.
         """
         # *********
-        # TODO 1.3.
-        next_state, prob = [], []
-        next_state, prob = self.gridWorld.getTransitionStatesAndProbs(state, action) #get all successor states and probabilities
-        reward = self.mdp.getReward(state,action,next_state) 
-        possible_transitions = len(next_state)
-        q_value = 0
-        for t in range(possible_transitions): #looping over all the possible transitions from state s
-            q_value += prob[t]*(reward + self.discount*self.V[next_state[t]])
+        # TODO 
+        successors = self.mdp.getTransitionStatesAndProbs(state, action) #get all successor states and probabilities
+        reward = self.mdp.getReward(state,action,None) 
+        q_value = 0.0
+        for next_state, prob in successors: #looping over all the possible transitions from state s
+            q_value += prob*(reward + self.discount*self.V[next_state])
         return q_value
 
         # **********
