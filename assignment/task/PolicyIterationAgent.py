@@ -1,6 +1,6 @@
 import numpy as np
 from agent import Agent
-
+import operator
 
 # TASK 1
 
@@ -21,31 +21,34 @@ class PolicyIterationAgent(Agent):
         # Policy initialization
         # ******************
         # TODO 1.1.a)
-        # self.V = ...
-
+        self.V = {s: 0 for s in states}
+        
         # *******************
 
         self.pi = {s: self.mdp.getPossibleActions(s)[-1] if self.mdp.getPossibleActions(s) else None for s in states}
-
+        
         counter = 0
 
         while True:
             # Policy evaluation
-            for i in range(iterations):
+            for i in range(iterations): # for every itereation
                 newV = {}
                 for s in states:
                     a = self.pi[s]
                     # *****************
                     # TODO 1.1.b)
-                    # if...
-                    #
-                    # else:...
-
-                # update value estimate
-                # self.V=...
-
-                # ******************
-
+                    if mdp.isTerminal(s) == True:
+                    # if a is None:  
+                        newV[s] = 0.0                        
+                    else:
+                        # update value estimate
+                        reward = self.mdp.getReward(s,a,None)
+                        successors = mdp.getTransitionStatesAndProbs(s,a)
+                        newV[s] = 0.0 
+                        for next_state, prob in successors: #looping over all the possible transitions from state s
+                            newV[s] += prob*(reward + discount*self.V[next_state]) #summing state value over all possible transition
+                    self.V[s] = newV[s]
+                        # ******************
             policy_stable = True
             for s in states:
                 actions = self.mdp.getPossibleActions(s)
@@ -55,10 +58,18 @@ class PolicyIterationAgent(Agent):
                     old_action = self.pi[s]
                     # ************
                     # TODO 1.1.c)
-                    # self.pi[s] = ...
-
-                    # policy_stable =
-
+                    v_pi = {a: 0 for a in actions}
+                    for a in actions: # iterate through every possible action : where is the best value, i.e., a = argmax_a q(s,a)
+                        reward = self.mdp.getReward(s,a,None)
+                        successors = mdp.getTransitionStatesAndProbs(s,a)
+                        for next_state, prob in successors: #looping over all the possible transitions from state s
+                            v_pi[a] += prob*(reward + discount*self.V[next_state])
+                    
+                    self.pi[s] = max(v_pi, key=v_pi.get)
+                   
+                    if old_action != self.pi[s]:
+                        policy_stable = False
+                   
                     # ****************
             counter += 1
 
@@ -72,7 +83,7 @@ class PolicyIterationAgent(Agent):
         """
         # *******
         # TODO 1.2.
-
+        return self.V[state]
         # ********
 
     def getQValue(self, state, action):
@@ -84,7 +95,13 @@ class PolicyIterationAgent(Agent):
         to derive it on the fly.
         """
         # *********
-        # TODO 1.3.
+        # TODO 
+        successors = self.mdp.getTransitionStatesAndProbs(state, action) #get all successor states and probabilities
+        reward = self.mdp.getReward(state,action,None) 
+        q_value = 0.0
+        for next_state, prob in successors: #looping over all the possible transitions from state s
+            q_value += prob*(reward + self.discount*self.V[next_state])
+        return q_value
 
         # **********
 
@@ -93,9 +110,10 @@ class PolicyIterationAgent(Agent):
         Look up the policy's recommendation for the state
         (after the indicated number of value iteration passes).
         """
+
         # **********
         # TODO 1.4.
-
+        return self.pi[state]
         # **********
 
     def getAction(self, state):

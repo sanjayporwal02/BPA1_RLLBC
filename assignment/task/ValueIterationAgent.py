@@ -71,7 +71,7 @@ class ValueIterationAgent(Agent):
             return None
 
         else:
-
+            pass #delete after implemeting below task
         # **********
         # TODO 2.4
 
