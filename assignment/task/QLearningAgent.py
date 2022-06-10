@@ -52,17 +52,17 @@ class QLearningAgent(Agent):
         """ Look up the current recommendation for the state. """
         # *********
         # TODO 3.3.
-        if state in self.Q:
-            actions = self.actionFunction(state)
-            for a in actions:
-                Qval = {a:0}
-                Qval += self.getQValue(state,a)
-
-            return max(Qval, key=Qval.get)
-            
-
-        else:
-            return self.getRandomAction(state)                   
+        actions = self.actionFunction(state)
+        if len(actions) == 0:
+            return "exit"
+        else:  
+            if state in self.Q:
+                for a in actions:
+                    Qval = {a:0}
+                    Qval += self.getQValue(state,a)
+                    return max(Qval, key=Qval.get)
+            else:
+                return self.getRandomAction(state)                   
             
 
         # *********
@@ -98,12 +98,13 @@ class QLearningAgent(Agent):
         """ Update parameters in response to the observed transition. """
         # *********
         # TODO 3.5.
+        
         if (state) in self.Q:
             for i in range (100):
                 self.Q[state, action] = self.Q[state, action] + self.learningRate * (reward + self.discount * np.max(self.Q[nextState, :]) — self.Q[state, action])
 
 
         else:
-             return self.qInitValue
+             self.Q[state, action] = self.qInitValue
 
         # *********
