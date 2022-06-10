@@ -32,6 +32,8 @@ class QLearningAgent(Agent):
         """ Look up the current value of the state. """
         # *********
         # TODO 3.1.
+        #self.V = {}
+        return self.V[state]
 
         # *********
 
@@ -39,6 +41,10 @@ class QLearningAgent(Agent):
         """ Look up the current q-value of the state action pair. """
         # *********
         # TODO 3.2.
+        if (state,action) in self.Q:
+            return self.Q[(state,action)]
+        else:
+             return self.qInitValue
 
         # *********
 
@@ -46,6 +52,18 @@ class QLearningAgent(Agent):
         """ Look up the current recommendation for the state. """
         # *********
         # TODO 3.3.
+        if state in self.Q:
+            actions = self.actionFunction(state)
+            for a in actions:
+                Qval = {a:0}
+                Qval += self.getQValue(state,a)
+
+            return max(Qval, key=Qval.get)
+            
+
+        else:
+            return self.getRandomAction(state)                   
+            
 
         # *********
 
@@ -53,7 +71,8 @@ class QLearningAgent(Agent):
         all_actions = self.actionFunction(state)
         if len(all_actions) > 0:
             # *********
-
+            return np.random.choice(all_actions) 
+            
             # *********
         else:
             return "exit"
@@ -62,6 +81,16 @@ class QLearningAgent(Agent):
         """ Choose an action: this will require that your agent balance exploration and exploitation as appropriate. """
         # *********
         # TODO 3.4.
+        if state in self.Q:
+
+            if np.random.rand(0, 1, dtype=np.float32) > self.epsilon:
+                return self.getPolicy(state)
+        
+            else:
+            # Select the action with max value
+                return self.getRandomAction(state)
+        else:
+            return self.getRandomAction(state)
 
         # *********
 
@@ -69,5 +98,12 @@ class QLearningAgent(Agent):
         """ Update parameters in response to the observed transition. """
         # *********
         # TODO 3.5.
+        if (state) in self.Q:
+            for i in range (100):
+                self.Q[state, action] = self.Q[state, action] + self.learningRate * (reward + self.discount * np.max(self.Q[nextState, :]) — self.Q[state, action])
+
+
+        else:
+             return self.qInitValue
 
         # *********
